@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://sandip2312.github.io/flipkart-amazon-meesho-label-cropper/sitemap.xml
