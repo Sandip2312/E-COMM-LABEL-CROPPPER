@@ -1913,6 +1913,7 @@
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({
             action: "WEB_CROP_LOG",
+            client_origin: window.location.origin || "null",
             name: u.name, brand: u.brand, mobile: u.mobile, email: u.email || "",
             city: u.city, state: u.state, platform: platformName, labels: labelCount,
             timestamp: new Date().toLocaleString("en-IN")
@@ -2023,6 +2024,7 @@
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           action: "WEB_LEAD_SIGNUP",
+          client_origin: window.location.origin || "null",
           name, brand, mobile, email, city, state,
           source: "Website_Label_Cropper",
           timestamp: userObj.created_at
@@ -4631,9 +4633,10 @@
         new_password: np
       });
       if (res && res.status === "OK") {
+        if (res.token) _adminSessionToken = String(res.token);
         document.getElementById("adm-cur-pin").value = "";
         document.getElementById("adm-new-pin").value = "";
-        if (st) { st.style.color = "#15803d"; st.textContent = "✅ Password safely hashed & updated on server! (Plain text kahin store nahi hua)"; }
+        if (st) { st.style.color = "#15803d"; st.textContent = "✅ Password updated (stretched SHA-256) & other sessions expired! Current session active hai."; }
       } else {
         if (st) { st.style.color = "#dc2626"; st.textContent = (res && res.message) ? res.message : "❌ Password update failed!"; }
       }
