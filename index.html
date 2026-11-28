@@ -9,7 +9,7 @@
   <meta name="application-name" content="Ecom Sandip" />
   <meta name="robots" content="index, follow" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://cdnjs.cloudflare.com https://unpkg.com; worker-src 'self' blob: https://cdnjs.cloudflare.com; font-src 'self' data: https:; object-src 'none'; base-uri 'self'; form-action 'self';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://cdnjs.cloudflare.com https://unpkg.com; worker-src 'self' blob: https://cdnjs.cloudflare.com; font-src 'self' data: https:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;" />
   <meta property="og:site_name" content="Ecom Sandip" />
   <meta property="og:title" content="Ecom Sandip - Free Flipkart Label Crop &amp; Meesho QR Sticker &amp; Amazon Label Crop" />
   <meta property="og:description" content="Free browser-based PDF tools for Flipkart, Meesho &amp; Amazon sellers. Crop labels locally in seconds, sort by SKU, and generate Meesho QR stickers + Brand Logo." />
@@ -340,13 +340,6 @@
 
     /* Bottom Auto-Rotating Product Ads Carousel (Visible on ALL Screens!) */
     .prod-showcase-sec { padding: 48px 5%; max-width: 1180px; margin: 0 auto; }
-    .prod-carousel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(225px, 1fr)); gap: 18px; margin: 22px 0; }
-    .prod-card { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 14px; text-align: center; box-shadow: 0 8px 22px rgba(15,23,42,0.06); display: flex; flex-direction: column; justify-content: space-between; transition: transform .2s, box-shadow .2s; animation: adFadeIn .35s ease; }
-    .prod-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(79,70,229,0.14); border-color: var(--indigo); }
-    .prod-card img { width: 100%; height: 156px; object-fit: contain; border-radius: 10px; background: #f8fafc; margin-bottom: 10px; }
-    .prod-cat { display: inline-block; background: #eef2ff; color: #4f46e5; font-size: 0.72rem; font-weight: 800; padding: 2px 10px; border-radius: 999px; margin-bottom: 6px; }
-    .prod-card h4 { font-size: 0.96rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; min-height: 2.5em; }
-    .prod-price { font-size: 1.05rem; font-weight: 900; color: #16a34a; margin-bottom: 10px; }
     .prod-ctrl-bar { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
     .car-arrow { width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #cbd5e1; background: #fff; font-size: 1.05rem; font-weight: 800; cursor: pointer; color: #1e293b; }
     .car-arrow:hover { background: var(--indigo); color: #fff; border-color: var(--indigo); }
@@ -1698,13 +1691,23 @@
         </div>
 
         <div class="sh-card">
-          <div class="sh-card-title">💾 Backup &amp; Restore Website Config</div>
+          <div class="sh-card-title">💾 Backup &amp; Restore Website Config (Auto Cloud Snapshots ON)</div>
+          <p style="font-size:0.8rem;color:#64748b;margin-bottom:10px;">Har baar Publish karne par purane config ka automatic cloud backup aapki Google Sheet ke <strong>Site_Config_Backups</strong> tab me save hota hai (last 15 versions).</p>
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <button type="button" class="sh-btn sh-btn-white" onclick="exportSiteConfigJson()">📥 Export Backup JSON</button>
             <input type="file" id="adm-import-json-file" accept=".json,application/json" style="display:none" />
             <button type="button" class="sh-btn sh-btn-white" onclick="document.getElementById('adm-import-json-file').click()">📤 Import Backup JSON</button>
             <button type="button" class="sh-btn sh-btn-danger" onclick="resetSiteConfigDefaults()">🔄 Reset All to Default</button>
           </div>
+        </div>
+
+        <div class="sh-card">
+          <div class="sh-card-title">
+            <span>🛡️ Live Security Monitoring Logs (Step 26)</span>
+            <button type="button" class="sh-btn sh-btn-green" onclick="loadAdminSecurityLogs()">🔄 Load Security Logs</button>
+          </div>
+          <div id="adm-seclogs-status" style="font-size:0.82rem;font-weight:700;color:#475569;margin-bottom:8px;">Failed logins, lockouts, blocked XSS/SSRF aur password changes yahan track hote hain.</div>
+          <div class="sh-leads-wrap" id="adm-seclogs-table-wrap"></div>
         </div>
       </div>
 
@@ -1823,9 +1826,11 @@
   // ============================================================================
   //  CONFIG & CONSTANTS
   // ============================================================================
-  const EXE_DOWNLOAD_URL = "https://github.com/Sandip2312/flipkart-amazon-meesho-label-cropper/releases/download/v1.0/Sandip_Ecom_Master_Suite.exe";
+  // Step 16: Enforce HTTPS automatically on live web hosts
+  if (window.location.protocol === "http:" && !/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname)) {
+    window.location.replace("https:" + window.location.href.substring(5));
+  }
   const LEAD_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbw9f9kyhS32_aVroH6E_pd2es9GiKcB-xFcy87Ifa6e6N4oxgS8sfl1sMrqDRHBpYDFZw/exec";
-  const SUPPORT_WA_NUM = "919724747690";
 
   let GUEST_DAILY_LIMIT = 1;     // Configurable in Shopify Admin Panel!
   let USER_DAILY_LIMIT = 3;      // Configurable in Shopify Admin Panel!
@@ -2127,7 +2132,7 @@
       body: JSON.stringify(securedPayload)
     });
     const txt = await resp.text();
-    try { return JSON.parse(txt); } catch (e) { return { status: "ERROR", message: "Invalid server response", raw: txt.slice(0, 120) }; }
+    try { return JSON.parse(txt); } catch (e) { return { status: "ERROR", message: "Invalid server response." }; }
   }
 
   function naturalSortCompare(a, b) {
@@ -2246,7 +2251,7 @@
         uploadedFiles[platform].push({ name: cleanUserInputText(f.name, 120), bytes, pageCount: pc });
         addedPages += pc;
       } catch (err) {
-        alert(`File "${f.name}" read nahi ho payi: ${err.message}`);
+        alert(`File "${cleanUserInputText(f.name, 60)}" read nahi ho payi. Kripya valid PDF upload karein.`);
       }
     }
     filePageCounts[platform] += addedPages;
@@ -2369,13 +2374,33 @@
 
   function renderResultsBox(prefix, title, downloadItems, summaryHtml) {
     const box = document.getElementById(`${prefix}-results`);
-    let btnsHtml = downloadItems.map((d, idx) =>
-      `<a class="btn ${idx === 0 ? "btn-primary" : "btn-dark"}" style="padding:9px 15px;font-size:0.86rem;" href="${escHtml(String(d.url || "").startsWith("blob:") ? d.url : "#")}" download="${escHtml(d.filename)}">${escHtml(d.label)}</a>`
-    ).join("");
-    box.innerHTML =
-      `<h4>${escHtml(title)}</h4>` +
-      `<div class="dl-btn-row">${btnsHtml}</div>` +
-      (summaryHtml ? `<div style="font-size:0.84rem;color:#334155;">${summaryHtml}</div>` : "");
+    box.textContent = "";
+    const h4 = document.createElement("h4");
+    h4.textContent = String(title || "");
+    box.appendChild(h4);
+
+    const row = document.createElement("div");
+    row.className = "dl-btn-row";
+    (downloadItems || []).forEach((d, idx) => {
+      const a = document.createElement("a");
+      a.className = "btn " + (idx === 0 ? "btn-primary" : "btn-dark");
+      a.style.padding = "9px 15px";
+      a.style.fontSize = "0.86rem";
+      const safeBlob = String(d.url || "").startsWith("blob:") ? d.url : "#";
+      a.setAttribute("href", safeBlob);
+      a.setAttribute("download", String(d.filename || "download.pdf"));
+      a.textContent = String(d.label || "Download");
+      row.appendChild(a);
+    });
+    box.appendChild(row);
+
+    if (summaryHtml) {
+      const infoDiv = document.createElement("div");
+      infoDiv.style.fontSize = "0.84rem";
+      infoDiv.style.color = "#334155";
+      infoDiv.innerHTML = summaryHtml;
+      box.appendChild(infoDiv);
+    }
     box.style.display = "block";
   }
 
@@ -2540,7 +2565,7 @@
       renderResultsBox("fk", `✅ Flipkart Labels Ready (${parsed.length} Labels in ${sec}s)`, downloads,
         `Single QTY: <strong>${singleList.length}</strong> &nbsp;|&nbsp; Multi-QTY: <strong>${multiList.length}</strong> &nbsp;|&nbsp; Auto-download complete (agar browser ne 2nd file roki ho toh upar button par click karein).`);
     } catch (err) {
-      setStatus("fk", `❌ Error: ${err.message}`, "err", null);
+      setStatus("fk", "❌ Flipkart PDF process karne me error aaya. Valid Flipkart PDF upload karein.", "err", null);
     } finally {
       _inFlightLocks.flipkart = false;
       document.getElementById("fk-run-btn").disabled = false;
@@ -2760,7 +2785,7 @@
       renderResultsBox("amz", `✅ Amazon 3X Big SKU Labels Ready (${parsed.length} Labels in ${sec}s)`, downloads,
         `Tax Invoices auto-removed! Single QTY: <strong>${singleList.length}</strong> &nbsp;|&nbsp; Multi-QTY: <strong>${multiList.length}</strong>`);
     } catch (err) {
-      setStatus("amz", `❌ Error: ${err.message}`, "err", null);
+      setStatus("amz", "❌ Amazon PDF process karne me error aaya. Valid Amazon PDF upload karein.", "err", null);
     } finally {
       _inFlightLocks.amazon = false;
       document.getElementById("amz-run-btn").disabled = false;
@@ -3312,7 +3337,7 @@
       renderResultsBox("msh", `✅ Meesho Labels Ready (${ordered.length} Labels in ${sec}s)`, downloads,
         (cBreak ? `Courier Breakdown: ${cBreak}` : `All ${ordered.length} labels cropped cleanly.`) + skipNote);
     } catch (err) {
-      setStatus("msh", `❌ Error: ${err.message}`, "err", null);
+      setStatus("msh", "❌ Meesho PDF process karne me error aaya. Valid Meesho PDF upload karein.", "err", null);
     } finally {
       _inFlightLocks.meesho = false;
       document.getElementById("msh-run-btn").disabled = false;
@@ -4430,6 +4455,52 @@
     }
   }
 
+  // ---------------- SECURITY MONITORING LOGS VIEWER (STEP 26) ----------------
+  async function loadAdminSecurityLogs() {
+    const st = document.getElementById("adm-seclogs-status");
+    const wrap = document.getElementById("adm-seclogs-table-wrap");
+    if (!_adminSessionToken) {
+      st.textContent = "🔒 Admin session expired — kripya dobara login karein.";
+      return;
+    }
+    st.textContent = "⏳ Loading security monitoring events from server...";
+    try {
+      const data = await postAppsScriptJson({ action: "ADMIN_GET_SECURITY_LOGS", token: _adminSessionToken });
+      if (data && data.status === "UNAUTHORIZED") {
+        _adminSessionToken = "";
+        st.textContent = "🔒 Session expired! Dobara Admin Login karein.";
+        return;
+      }
+      if (data && Array.isArray(data.logs)) {
+        if (!data.logs.length) {
+          st.textContent = "✅ Abhi tak koi suspicious security event record nahi hua hai.";
+          wrap.innerHTML = "";
+          return;
+        }
+        st.textContent = `✅ Latest ${data.logs.length} security events loaded:`;
+        wrap.innerHTML = `
+          <table class="sh-tbl">
+            <thead><tr><th>Time (IST)</th><th>Severity</th><th>Event</th><th>Details</th></tr></thead>
+            <tbody>
+              ${data.logs.slice(0, 80).map(ev => {
+                const sevCol = (ev.severity === "CRITICAL" || ev.severity === "HIGH") ? "#dc2626" : (ev.severity === "WARN" ? "#d97706" : "#15803d");
+                return `<tr>
+                  <td>${escHtml(ev.time)}</td>
+                  <td><strong style="color:${sevCol};">${escHtml(ev.severity)}</strong></td>
+                  <td><code>${escHtml(ev.event)}</code></td>
+                  <td>${escHtml(ev.detail)}</td>
+                </tr>`;
+              }).join("")}
+            </tbody>
+          </table>`;
+        return;
+      }
+      st.textContent = (data && data.message) ? data.message : "ℹ️ Security logs dekhne ke liye v16 Apps Script deploy karein.";
+    } catch (e) {
+      st.textContent = "⚠️ Security logs fetch error.";
+    }
+  }
+
   // Compress uploaded product photo cleanly
   document.getElementById("adm-p-img-file").addEventListener("change", function () {
     const file = this.files && this.files[0];
@@ -4506,7 +4577,7 @@
           alert("✅ Backup JSON imported! Ab upar '🚀 Save & Publish Live' dabayein.");
         }
       } catch (err) {
-        alert("❌ Invalid JSON file: " + err.message);
+        alert("❌ Invalid JSON backup file. Kripya sahi backup file select karein.");
       }
     };
     reader.readAsText(file);
