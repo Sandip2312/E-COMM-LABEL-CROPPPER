@@ -82,9 +82,9 @@
   </script>
 
   <!-- Fast Browser-Side PDF & QR Engines (100% Local Processing, Zero Server Upload!) -->
-  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
   <style>
     :root {
@@ -2080,6 +2080,12 @@
     return "";
   }
 
+  // Strict #RRGGBB hex validator (blocks CSS injection via theme/override colors)
+  function safeHexColor(raw, fallback = "") {
+    const s = String(raw || "").trim();
+    return /^#[0-9a-fA-F]{6}$/.test(s) ? s : fallback;
+  }
+
   function isPdfMagicBytes(bytes) {
     if (!bytes || bytes.length < 5) return false;
     // Allow minor leading whitespace/BOM before %PDF-
@@ -3441,9 +3447,9 @@
   function applySiteConfigToDOM() {
     const rootStyle = document.documentElement.style;
     if (SITE_CFG.theme) {
-      rootStyle.setProperty("--indigo", SITE_CFG.theme.primary || "#4f46e5");
-      rootStyle.setProperty("--blue", SITE_CFG.theme.blue || "#2563eb");
-      rootStyle.setProperty("--bg", SITE_CFG.theme.bg || "#0b1120");
+      rootStyle.setProperty("--indigo", safeHexColor(SITE_CFG.theme.primary, "#4f46e5"));
+      rootStyle.setProperty("--blue", safeHexColor(SITE_CFG.theme.blue, "#2563eb"));
+      rootStyle.setProperty("--bg", safeHexColor(SITE_CFG.theme.bg, "#0b1120"));
     }
 
     const setTxt = (id, val) => { const el = document.getElementById(id); if (el && val) el.textContent = val; };
@@ -3749,9 +3755,11 @@
         el.setAttribute("href", _safeOvHref);
         el.dataset.customWa = "1";
       }
-      if (ov.bg) el.style.background = ov.bg;
+      const _sBg = safeHexColor(ov.bg, "");
+      const _sFg = safeHexColor(ov.fg, "");
+      if (_sBg) el.style.background = _sBg;
       else if (orig) el.style.background = orig.bg;
-      if (ov.fg) el.style.color = ov.fg;
+      if (_sFg) el.style.color = _sFg;
       else if (orig) el.style.color = orig.fg;
       if (ov.hidden) el.style.display = "none";
       else if (orig) el.style.display = orig.display;
@@ -3767,8 +3775,12 @@
     }
     // Dynamic button radius & page background
     if (SITE_CFG.theme) {
-      if (SITE_CFG.theme.light) document.documentElement.style.setProperty("--light", SITE_CFG.theme.light);
-      if (SITE_CFG.theme.btnRadius !== undefined) document.documentElement.style.setProperty("--btn-radius", `${SITE_CFG.theme.btnRadius}px`);
+      const _sLight = safeHexColor(SITE_CFG.theme.light, "");
+      if (_sLight) document.documentElement.style.setProperty("--light", _sLight);
+      if (SITE_CFG.theme.btnRadius !== undefined) {
+        const _r = Math.max(0, Math.min(30, Number(SITE_CFG.theme.btnRadius) || 10));
+        document.documentElement.style.setProperty("--btn-radius", `${_r}px`);
+      }
     }
     // Section visibility toggles
     const visMap = SITE_CFG.sections || {};
@@ -4166,8 +4178,8 @@
     if (document.getElementById("ve-href-wrap").style.display !== "none" && hrefVal) {
       entry.href = hrefVal;
     }
-    if (document.getElementById("ve-use-bg").checked) entry.bg = document.getElementById("ve-inp-bg").value;
-    if (document.getElementById("ve-use-fg").checked) entry.fg = document.getElementById("ve-inp-fg").value;
+    if (document.getElementById("ve-use-bg").checked) { const c = safeHexColor(document.getElementById("ve-inp-bg").value); if (c) entry.bg = c; }
+    if (document.getElementById("ve-use-fg").checked) { const c = safeHexColor(document.getElementById("ve-inp-fg").value); if (c) entry.fg = c; }
 
     SITE_CFG.elOverrides[_veSelectedKey] = entry;
     applyElementOverrides();
@@ -4478,6 +4490,14 @@
         const obj = JSON.parse(reader.result);
         if (obj && typeof obj === "object") {
           delete obj.pin;
+          if (obj.exeUrl) obj.exeUrl = safeUrl(obj.exeUrl, false) || DEFAULT_SITE_CFG.exeUrl;
+          if (obj.leftAd && obj.leftAd.img) obj.leftAd.img = safeUrl(obj.leftAd.img, true) || DEFAULT_SITE_CFG.leftAd.img;
+          if (Array.isArray(obj.products)) {
+            obj.products = obj.products.map(p => Object.assign({}, p, {
+              img: safeUrl(p.img, true),
+              link: safeUrl(p.link, false)
+            }));
+          }
           SITE_CFG = Object.assign({}, DEFAULT_SITE_CFG, obj);
           populateAdminForm();
           applySiteConfigToDOM();
